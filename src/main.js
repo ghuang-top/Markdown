@@ -917,7 +917,7 @@ function setupCodeCopy() {
         // 获取代码语言
         let language = '';
         if (codeBlock.className) {
-            const langMatch = codeBlock.className.match(/language-(\w+)/);
+            const langMatch = codeBlock.className.match(/language-([a-zA-Z0-9#+\-]+)/);
             if (langMatch && langMatch[1]) {
                 language = langMatch[1];
                 if (language === 'plaintext') language = 'text';
