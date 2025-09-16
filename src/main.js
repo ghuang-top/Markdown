@@ -68,27 +68,16 @@ document.addEventListener('DOMContentLoaded', function() {
         reader.onload = function(e) {
             const content = e.target.result;
             
-            // 清除占位符
-            markdownContent.innerHTML = '';
-            
-            // 渲染Markdown
-            markdownContent.innerHTML = marked.parse(content);
-            
-            // 处理代码块的语法高亮
+                markdownContent.innerHTML = marked.parse(content);
+            handleCodeBlockTitles(content);
+
             document.querySelectorAll('pre code').forEach((block) => {
                 hljs.highlightElement(block);
             });
 
-            // 处理任务列表
             handleTaskLists();
-            
-            // 为图片添加点击放大功能
             setupImageZoom();
-            
-            // 为代码块添加现代化的复制功能
             setupCodeCopy();
-            
-            // 生成目录
             generateTableOfContents();
         };
         
@@ -100,7 +89,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const darkMode = document.body.classList.toggle('dark-theme');
         localStorage.setItem('md-dark-mode', darkMode ? 'true' : 'false');
         
-        // 调整代码高亮主题
         updateCodeHighlightTheme(darkMode);
     });
     
@@ -121,28 +109,22 @@ document.addEventListener('DOMContentLoaded', function() {
         window.print();
     });
     
-    // 切换高亮样式
     highlightStyle.addEventListener('change', function() {
         const style = this.value;
         highlightTheme.href = `https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/${style}.min.css`;
         localStorage.setItem('md-highlight-style', style);
     });
     
-    // 切换目录显示（下拉菜单）
     toggleToc.addEventListener('click', function(e) {
         e.stopPropagation();
         tocDropdown.classList.toggle('active');
-        
-        // 修改：切换侧边栏目录显示/隐藏，不受屏幕大小限制
         tocSidebar.classList.toggle('active');
     });
     
-    // 点击文档其他位置关闭目录下拉菜单
     document.addEventListener('click', function() {
         tocDropdown.classList.remove('active');
     });
     
-    // 阻止点击目录下拉内容时关闭
     tocDropdown.addEventListener('click', function(e) {
         e.stopPropagation();
     });
@@ -165,7 +147,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // 处理任务列表 (GitHub风格的复选框)
     function handleTaskLists() {
         const lis = document.querySelectorAll('li');
         
@@ -182,7 +163,65 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // 添加简单的拖放支持
+    function handleCodeBlockTitles(markdownContent) {
+        const lines = markdownContent.split('\n');
+        const codeBlocksWithTitles = [];
+
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i].trim();
+            const match = line.match(/^```([a-zA-Z0-9#+\-]*)\s+title="([^"]+)"$/);
+
+            if (match) {
+                const language = match[1] || '';
+                const title = match[2];
+
+                let endIndex = -1;
+                for (let j = i + 1; j < lines.length; j++) {
+                    if (lines[j].trim() === '```') {
+                        endIndex = j;
+                        break;
+                    }
+                }
+
+                if (endIndex !== -1) {
+                    const codeLines = lines.slice(i + 1, endIndex);
+                    const code = codeLines.join('\n');
+                    codeBlocksWithTitles.push({ title, code, language });
+                }
+            }
+        }
+
+        window.codeBlocksWithTitles = codeBlocksWithTitles;
+
+        const preElements = document.querySelectorAll('.markdown-content pre');
+        let titleIndex = 0;
+
+        preElements.forEach((preElement, index) => {
+            const codeElement = preElement.querySelector('code');
+            if (!codeElement) return;
+
+            if (titleIndex < codeBlocksWithTitles.length) {
+                const blockInfo = codeBlocksWithTitles[titleIndex];
+
+                const wrapper = document.createElement('div');
+                wrapper.className = 'code-block-with-title';
+
+                const titleElement = document.createElement('div');
+                titleElement.className = 'code-title';
+                titleElement.textContent = blockInfo.title;
+
+                const parentNode = preElement.parentNode;
+                if (parentNode) {
+                    parentNode.insertBefore(wrapper, preElement);
+                    wrapper.appendChild(titleElement);
+                    wrapper.appendChild(preElement);
+                }
+
+                titleIndex++;
+            }
+        });
+    }
+
     const dropZone = document.querySelector('.markdown-container');
     
     dropZone.addEventListener('dragover', function(e) {
@@ -205,45 +244,23 @@ document.addEventListener('DOMContentLoaded', function() {
         if (files.length > 0) {
             markdownFileInput.files = files;
             
-            // 手动触发change事件
-            const event = new Event('change');
+                    const event = new Event('change');
             markdownFileInput.dispatchEvent(event);
         }
     });
 
-    // 处理响应式布局
     function handleResponsiveLayout() {
         const windowWidth = window.innerWidth;
-        
-        // 修改：不根据屏幕大小自动显示侧边栏目录
-        // 只有用户点击目录按钮时才显示
         if (windowWidth < 768) {
             tocSidebar.classList.remove('active');
         }
-        
-        // 注释掉自动显示侧边栏的代码
-        /*
-        if (windowWidth >= 768) {
-            if (markdownContent.innerHTML !== '' && !markdownContent.querySelector('.placeholder')) {
-                tocSidebar.classList.add('active');
-            }
-        } else {
-            tocSidebar.classList.remove('active');
-        }
-        */
     }
 
-    // 样式增强
     addDragoverStyle();
-    
-    // 创建图片查看模态框
     createImageModal();
-    
-    // 从本地存储加载高亮样式
     loadHighlightStyle();
 });
 
-// 初始化主题设置
 function initTheme() {
     const darkMode = localStorage.getItem('md-dark-mode');
     if (darkMode === 'true') {
@@ -256,7 +273,6 @@ function initTheme() {
     }
 }
 
-// 更新代码高亮主题
 function updateCodeHighlightTheme(darkMode) {
     const highlightTheme = document.getElementById('highlight-theme');
     const currentStyle = localStorage.getItem('md-highlight-style');
@@ -278,13 +294,11 @@ function updateCodeHighlightTheme(darkMode) {
     }
 }
 
-// 更新字体大小
 function updateFontSize(size) {
     document.documentElement.style.setProperty('--content-font-size', `${size}px`);
     localStorage.setItem('md-fontSize', size);
 }
 
-// 加载高亮样式
 function loadHighlightStyle() {
     const style = localStorage.getItem('md-highlight-style');
     if (style) {
@@ -293,7 +307,6 @@ function loadHighlightStyle() {
     }
 }
 
-// 生成目录
 function generateTableOfContents() {
     const headings = document.querySelectorAll('.markdown-content h1, .markdown-content h2, .markdown-content h3, .markdown-content h4, .markdown-content h5, .markdown-content h6');
     
@@ -326,29 +339,20 @@ function generateTableOfContents() {
     let listStack = [toc];
     
     headings.forEach((heading, index) => {
-        // 获取标题级别
         const level = parseInt(heading.tagName.substring(1));
-        
-        // 为标题添加ID
         if (!heading.id) {
             heading.id = `heading-${index}`;
         }
         
-        // 创建目录项
         const listItem = document.createElement('li');
         const link = document.createElement('a');
         link.href = `#${heading.id}`;
         link.textContent = heading.textContent;
         link.addEventListener('click', function(e) {
-            // 关闭下拉菜单
             document.getElementById('toc').classList.remove('active');
-            
-            // 在小屏幕上点击目录项后自动隐藏侧边栏目录
             if (window.innerWidth < 768) {
                 document.getElementById('toc-sidebar').classList.remove('active');
             }
-            
-            // 平滑滚动到标题位置
             e.preventDefault();
             const targetHeading = document.getElementById(heading.id);
             const targetPosition = targetHeading.getBoundingClientRect().top + window.pageYOffset;
@@ -360,15 +364,15 @@ function generateTableOfContents() {
         });
         listItem.appendChild(link);
         
-        // 处理嵌套层次
         if (level > currentLevel) {
-            // 创建子列表
             const newList = document.createElement('ul');
-            listStack[listStack.length - 1].lastChild.appendChild(newList);
-            listStack.push(newList);
-            currentList = newList;
+            const parentList = listStack[listStack.length - 1];
+            if (parentList && parentList.lastChild) {
+                parentList.lastChild.appendChild(newList);
+                listStack.push(newList);
+                currentList = newList;
+            }
         } else if (level < currentLevel) {
-            // 返回上一级
             const steps = currentLevel - level;
             for (let i = 0; i < steps; i++) {
                 listStack.pop();
@@ -380,18 +384,14 @@ function generateTableOfContents() {
         currentList.appendChild(listItem);
     });
     
-    // 更新侧边栏和下拉菜单的目录
     document.getElementById('toc-content').innerHTML = '';
     document.getElementById('toc-content').appendChild(toc.cloneNode(true));
     
     document.getElementById('toc').innerHTML = '';
     document.getElementById('toc').appendChild(toc);
     
-    // 显示侧边栏（仅在大屏幕上）
-    handleResponsiveLayout();
 }
 
-// 添加拖放区域的样式
 function addDragoverStyle() {
     const style = document.createElement('style');
     style.textContent = `
@@ -496,6 +496,28 @@ function addDragoverStyle() {
         }
         
         /* GitHub风格代码块 */
+        .code-block-with-title {
+            margin-bottom: 16px;
+        }
+
+        .code-title {
+            background-color: #f6f8fa;
+            border: 1px solid #d0d7de;
+            border-bottom: none;
+            border-radius: 6px 6px 0 0;
+            padding: 8px 16px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            color: #24292f;
+            margin: 0;
+        }
+
+        .code-block-with-title pre {
+            margin-bottom: 0 !important;
+            border-radius: 0 0 6px 6px !important;
+        }
+
         .markdown-content pre {
             position: relative;
             margin-bottom: 16px;
@@ -628,6 +650,15 @@ function addDragoverStyle() {
         }
         
         /* 暗色模式适配 - GitHub风格 */
+        body.dark-theme .code-title,
+        @media (prefers-color-scheme: dark) {
+            body:not(.light-theme) .code-title {
+                background-color: #161b22;
+                border-color: #30363d;
+                color: #f0f6fc;
+            }
+        }
+
         body.dark-theme .markdown-content pre,
         @media (prefers-color-scheme: dark) {
             body:not(.light-theme) .markdown-content pre {
@@ -772,7 +803,6 @@ function addDragoverStyle() {
     document.head.appendChild(style);
 }
 
-// 创建图片查看模态框
 function createImageModal() {
     const modal = document.createElement('div');
     modal.className = 'image-modal';
@@ -783,7 +813,6 @@ function createImageModal() {
     `;
     document.body.appendChild(modal);
     
-    // 关闭模态框事件
     const closeBtn = modal.querySelector('.close-modal');
     closeBtn.addEventListener('click', () => {
         closeImageModal(modal);
@@ -795,8 +824,6 @@ function createImageModal() {
             closeImageModal(modal);
         }
     });
-    
-    // ESC键关闭模态框
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && modal.classList.contains('active')) {
             closeImageModal(modal);
@@ -804,7 +831,6 @@ function createImageModal() {
     });
 }
 
-// 关闭图片模态框
 function closeImageModal(modal) {
     modal.style.opacity = '0';
     setTimeout(() => {
@@ -813,77 +839,81 @@ function closeImageModal(modal) {
     }, 300);
 }
 
-// 为图片添加点击放大功能
 function setupImageZoom() {
     const images = document.querySelectorAll('.markdown-content img');
     const modal = document.querySelector('.image-modal');
     const modalImage = modal.querySelector('.modal-image');
     const imageCaption = modal.querySelector('.image-caption');
     
-    // 简单的缩放状态
     let isZoomed = false;
-    
-    // 图片点击缩放功能
     modalImage.addEventListener('click', (e) => {
         e.stopPropagation();
         
         if (isZoomed) {
-            // 缩小回原始大小
             isZoomed = false;
             modalImage.style.transform = 'scale(1)';
             modalImage.style.cursor = 'zoom-in';
         } else {
-            // 放大图片
             isZoomed = true;
             modalImage.style.transform = 'scale(2)';
             modalImage.style.cursor = 'zoom-out';
         }
     });
     
-    // 为每个图片添加点击事件
     images.forEach((img) => {
-        // 添加点击事件
         img.addEventListener('click', () => {
-            // 重置缩放状态
             isZoomed = false;
             modalImage.style.transform = 'scale(1)';
             modalImage.style.cursor = 'zoom-in';
             
-            // 设置图片源
             modalImage.src = img.src;
-            
-            // 设置图片说明文字（如果有alt或title属性）
             const caption = img.alt || img.title || '';
             imageCaption.textContent = caption;
             
-            // 显示模态框
             modal.classList.add('active');
             modal.style.opacity = '1';
-            document.body.style.overflow = 'hidden'; // 防止页面滚动
+            document.body.style.overflow = 'hidden';
         });
         
-        // 添加图片加载指示器
         img.addEventListener('load', () => {
             img.style.opacity = 1;
         });
         
-        // 设置初始透明度
         img.style.opacity = 0;
         img.style.transition = 'opacity 0.3s';
     });
 }
 
+// 格式化语言名称显示
+function formatLanguageName(language) {
+    const langLower = language.toLowerCase();
+    const languageMap = {
+        'c#': 'C#', 'csharp': 'C#', 'cs': 'C#',
+        'f#': 'F#', 'fsharp': 'F#', 'fs': 'F#',
+        'c++': 'C++', 'cpp': 'C++', 'cxx': 'C++',
+        'javascript': 'JavaScript', 'js': 'JavaScript',
+        'typescript': 'TypeScript', 'ts': 'TypeScript',
+        'python': 'Python', 'py': 'Python',
+        'java': 'Java', 'html': 'HTML', 'css': 'CSS', 'sql': 'SQL'
+    };
+
+    return languageMap[langLower] || language.charAt(0).toUpperCase() + language.slice(1).toLowerCase();
+}
+
 // 为代码块添加现代化的复制功能
 function setupCodeCopy() {
     const codeBlocks = document.querySelectorAll('.markdown-content pre code');
-    
+
     // 为每个代码块添加复制按钮和语言标签
     codeBlocks.forEach((codeBlock) => {
         const preElement = codeBlock.parentElement;
-        
+
+        // 检查是否在带有title的容器中
+        const hasTitle = preElement.closest('.code-block-with-title');
+
         // 设置pre元素为相对定位，以便定位复制按钮
         preElement.style.position = 'relative';
-        
+
         // 获取代码语言
         let language = '';
         if (codeBlock.className) {
@@ -894,13 +924,30 @@ function setupCodeCopy() {
                 if (language === 'shell') language = 'bash';
             }
         }
-        
-        // 如果找到语言，添加语言标签
+
+        // 如果是带有title的代码块，从title容器的数据中获取语言信息
+        if (hasTitle) {
+            // 查找匹配的代码块信息
+            const codeText = codeBlock.textContent;
+            // 这里我们需要从全局存储的代码块信息中获取语言
+            if (window.codeBlocksWithTitles) {
+                const matchedBlock = window.codeBlocksWithTitles.find(block =>
+                    codeText.trim() === block.code.trim()
+                );
+                if (matchedBlock && matchedBlock.language) {
+                    language = matchedBlock.language;
+                }
+            }
+        }
+
+        // 总是添加语言标签（如果有语言信息）
         if (language && language !== 'hljs') {
             const langTag = document.createElement('div');
             langTag.className = 'code-language-tag';
-            langTag.textContent = language;
-            preElement.appendChild(langTag);
+            langTag.textContent = formatLanguageName(language);
+            if (preElement) {
+                preElement.appendChild(langTag);
+            }
         }
         
         // 创建复制按钮 - GitHub风格
@@ -926,8 +973,7 @@ function setupCodeCopy() {
             if (navigator.clipboard && window.isSecureContext) {
                 navigator.clipboard.writeText(codeText)
                     .then(() => showCopySuccess(copyButton))
-                    .catch((err) => {
-                        console.error('复制失败:', err);
+                    .catch(() => {
                         fallbackCopyTextToClipboard(codeText, copyButton);
                     });
             } else {
@@ -935,8 +981,9 @@ function setupCodeCopy() {
             }
         });
         
-        // 将复制按钮添加到代码块
-        preElement.appendChild(copyButton);
+        if (preElement) {
+            preElement.appendChild(copyButton);
+        }
     });
     
     // 兼容旧浏览器的复制方法
@@ -966,18 +1013,14 @@ function setupCodeCopy() {
                 showCopySuccess(button);
             }
         } catch (err) {
-            console.error('复制失败:', err);
+            // 复制失败时静默处理
         }
         
         document.body.removeChild(textArea);
     }
     
-    // 显示复制成功 - GitHub风格
     function showCopySuccess(button) {
-        // 添加成功类
         button.classList.add('gh-clipboard--success');
-        
-        // 更改图标为对勾
         const originalIcon = button.innerHTML;
         button.innerHTML = `
             <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16">
@@ -985,10 +1028,7 @@ function setupCodeCopy() {
             </svg>
         `;
         
-        // 显示成功提示词
         button.setAttribute('aria-label', '已复制!');
-        
-        // 恢复原状
         setTimeout(() => {
             button.classList.remove('gh-clipboard--success');
             button.innerHTML = originalIcon;
@@ -999,7 +1039,6 @@ function setupCodeCopy() {
 
 // 创建返回顶部按钮
 function createBackToTopButton() {
-    // 创建按钮元素
     const backToTopButton = document.createElement('button');
     backToTopButton.className = 'back-to-top';
     backToTopButton.setAttribute('aria-label', '返回顶部');
@@ -1009,10 +1048,7 @@ function createBackToTopButton() {
         </svg>
     `;
     
-    // 添加到文档
     document.body.appendChild(backToTopButton);
-    
-    // 添加点击事件
     backToTopButton.addEventListener('click', () => {
         window.scrollTo({
             top: 0,
@@ -1020,8 +1056,7 @@ function createBackToTopButton() {
         });
     });
     
-    // 监听滚动事件，控制按钮显示和隐藏
-    const scrollThreshold = 300; // 滚动超过这个距离时显示按钮
+    const scrollThreshold = 300;
     
     window.addEventListener('scroll', () => {
         if (window.scrollY > scrollThreshold) {
