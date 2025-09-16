@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown阅读器</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/languages/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/languages/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/languages/java.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/languages/cpp.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/languages/typescript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/languages/bash.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/languages/css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/languages/html.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/languages/json.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/languages/markdown.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/github.min.css" id="highlight-theme">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📝</text></svg>">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Markdown阅读器</h1>
+            <div class="header-controls">
+                <button id="theme-toggle" class="theme-toggle" aria-label="切换主题">🌓</button>
+                <div class="file-input-container">
+                    <input type="file" id="markdown-file" accept=".md, .markdown, .txt">
+                    <label for="markdown-file" class="file-input-label">选择Markdown文件</label>
+                </div>
+            </div>
+        </header>
+        <main>
+            <div class="toolbar">
+                <div class="toolbar-left">
+                    <button id="increase-font" class="toolbar-btn" aria-label="增大字体">A+</button>
+                    <button id="decrease-font" class="toolbar-btn" aria-label="减小字体">A-</button>
+                    <button id="print-content" class="toolbar-btn" aria-label="打印内容">🖨️</button>
+                </div>
+                <div class="toolbar-right">
+                    <select id="highlight-style" class="highlight-select">
+                        <option value="github">Github</option>
+                        <option value="github-dark">Github Dark</option>
+                        <option value="vs">Visual Studio</option>
+                        <option value="atom-one-dark">Atom One Dark</option>
+                    </select>
+                    <div class="toc-container">
+                        <button id="toggle-toc" class="toolbar-btn" aria-label="目录">📑</button>
+                        <div id="toc" class="toc-dropdown"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="content-area">
+                <div id="toc-sidebar" class="toc-sidebar">
+                    <h3>目录</h3>
+                    <div id="toc-content"></div>
+                </div>
+                <div class="markdown-container" id="markdown-container">
+                    <div class="markdown-content" id="markdown-content">
+                        <div class="placeholder">
+                            <p>请选择一个Markdown文件以查看渲染效果</p>
+                            <p class="placeholder-hint">支持GitHub风格Markdown，包括表格、代码高亮等</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        <footer>
+            <p>GitHub风格Markdown阅读器 | <a href="#" id="about-link">关于</a></p>
+        </footer>
+        
+        <div id="about-modal" class="modal">
+            <div class="modal-content">
+                <span class="close-modal">&times;</span>
+                <h2>关于Markdown阅读器</h2>
+                <p>这是一个简单的本地Markdown阅读器，支持GitHub风格Markdown语法。</p>
+                <p>特性：</p>
+                <ul>
+                    <li>完全在浏览器中运行，不需要服务器</li>
+                    <li>支持代码高亮和多种主题</li>
+                    <li>自动生成目录</li>
+                    <li>打印功能</li>
+                    <li>暗色/亮色主题切换</li>
+                </ul>
+                <p>使用的库：</p>
+                <ul>
+                    <li><a href="https://marked.js.org/" target="_blank">Marked.js</a> - Markdown解析</li>
+                    <li><a href="https://highlightjs.org/" target="_blank">highlight.js</a> - 代码高亮</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <script src="main.js"></script>
+</body>
+</html> 
